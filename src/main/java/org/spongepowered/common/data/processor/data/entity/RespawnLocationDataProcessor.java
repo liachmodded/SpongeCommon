@@ -34,6 +34,7 @@ import org.spongepowered.api.data.value.ValueContainer;
 import org.spongepowered.api.data.value.immutable.ImmutableMapValue;
 import org.spongepowered.api.data.value.mutable.MapValue;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.util.Tuple;
 import org.spongepowered.common.data.manipulator.mutable.entity.SpongeRespawnLocationData;
 import org.spongepowered.common.data.processor.common.AbstractSingleDataSingleTargetProcessor;
 import org.spongepowered.common.data.value.immutable.ImmutableSpongeMapValue;
@@ -45,7 +46,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class RespawnLocationDataProcessor extends
-        AbstractSingleDataSingleTargetProcessor<User, Map<UUID, Vector3d>, MapValue<UUID, Vector3d>, RespawnLocationData, ImmutableRespawnLocation> {
+        AbstractSingleDataSingleTargetProcessor<User, Map<UUID, Tuple<Vector3d, Boolean>>, MapValue<UUID, Tuple<Vector3d, Boolean>>, RespawnLocationData, ImmutableRespawnLocation> {
 
     public RespawnLocationDataProcessor() {
         super(Keys.RESPAWN_LOCATIONS, User.class);
@@ -54,10 +55,9 @@ public class RespawnLocationDataProcessor extends
     @Override
     public DataTransactionResult removeFrom(ValueContainer<?> container) {
         if (container instanceof ISpongeUser) {
-            ImmutableMap<UUID, Vector3d> removed = ((ISpongeUser) container).removeAllBeds();
+            ImmutableMap<UUID, Tuple<Vector3d, Boolean>> removed = ((ISpongeUser) container).removeAllBeds();
             if (!removed.isEmpty()) {
-                return DataTransactionResult
-                        .builder().result(DataTransactionResult.Type.SUCCESS).replace(constructImmutableValue(removed)).build();
+                return DataTransactionResult.successRemove(constructImmutableValue(removed));
             } else {
                 return DataTransactionResult.successNoData();
             }
@@ -66,7 +66,7 @@ public class RespawnLocationDataProcessor extends
     }
 
     @Override
-    protected boolean set(User user, Map<UUID, Vector3d> value) {
+    protected boolean set(User user, Map<UUID, Tuple<Vector3d, Boolean>> value) {
         if (user instanceof ISpongeUser) {
             return ((ISpongeUser) user).setBedLocations(value);
         }
@@ -74,7 +74,7 @@ public class RespawnLocationDataProcessor extends
     }
 
     @Override
-    protected Optional<Map<UUID, Vector3d>> getVal(User user) {
+    protected Optional<Map<UUID, Tuple<Vector3d, Boolean>>> getVal(User user) {
         if (user instanceof ISpongeUser) {
             return Optional.of(((ISpongeUser) user).getBedlocations());
         }
@@ -82,12 +82,12 @@ public class RespawnLocationDataProcessor extends
     }
 
     @Override
-    protected MapValue<UUID, Vector3d> constructValue(Map<UUID, Vector3d> actualValue) {
+    protected MapValue<UUID, Tuple<Vector3d, Boolean>> constructValue(Map<UUID, Tuple<Vector3d, Boolean>> actualValue) {
         return new SpongeMapValue<>(Keys.RESPAWN_LOCATIONS, actualValue);
     }
 
     @Override
-    protected ImmutableMapValue<UUID, Vector3d> constructImmutableValue(Map<UUID, Vector3d> value) {
+    protected ImmutableMapValue<UUID, Tuple<Vector3d, Boolean>> constructImmutableValue(Map<UUID, Tuple<Vector3d, Boolean>> value) {
         return new ImmutableSpongeMapValue<>(Keys.RESPAWN_LOCATIONS, value);
     }
 
