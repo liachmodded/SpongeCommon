@@ -24,13 +24,20 @@
  */
 package org.spongepowered.common.event.filter.delegate;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACONST_NULL;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ARETURN;
+import static org.objectweb.asm.Opcodes.ASTORE;
+import static org.objectweb.asm.Opcodes.IFEQ;
+import static org.objectweb.asm.Opcodes.IFNE;
+import static org.objectweb.asm.Opcodes.INSTANCEOF;
+import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.spongepowered.api.event.Event;
-import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.util.Tuple;
 
@@ -75,6 +82,27 @@ public class GetterFilterSourceDelegate implements ParameterFilterSourceDelegate
                 "()" + Type.getDescriptor(targetMethodObj.getReturnType()), true);
         int paramLocal = local++;
         mv.visitVarInsn(ASTORE, paramLocal);
+        Label failure = new Label();
+        Label success = new Label();
+        if (Optional.class.equals(targetMethodObj.getReturnType()) && !Optional.class.equals(targetType)) {
+            // Unwrap the optional
+            mv.visitVarInsn(ALOAD, paramLocal);
+
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Optional", "isPresent", "()Z", false);
+            mv.visitJumpInsn(IFEQ, failure);
+
+            mv.visitVarInsn(ALOAD, paramLocal);
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Optional", "get", "()Ljava/lang/Object;", false);
+
+            mv.visitVarInsn(ASTORE, paramLocal);
+        }
+        mv.visitVarInsn(ALOAD, paramLocal);
+        mv.visitTypeInsn(INSTANCEOF, Type.getInternalName(targetType));
+        mv.visitJumpInsn(IFNE, success);
+        mv.visitLabel(failure);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitInsn(ARETURN);
+        mv.visitLabel(success);
 
         return new Tuple<>(local, paramLocal);
     }
