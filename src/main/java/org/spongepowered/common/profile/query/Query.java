@@ -63,9 +63,12 @@ public abstract class Query<V> implements Callable<V> {
                     .collect(Collectors.toSet());
             mutableIds.stream()
                     .filter(cached::contains)
-                    .forEach(uniqueId -> this.cache.getById(uniqueId).ifPresent(result::add));
+                    .forEach(uniqueId -> this.cache.getById(uniqueId).ifPresent(profile -> {
+                        result.add(profile);
+                        mutableIds.remove(uniqueId);
+                    }));
 
-            if (mutableIds.size() == result.size()) {
+            if (mutableIds.isEmpty()) {
                 return result;
             }
         }
@@ -109,9 +112,12 @@ public abstract class Query<V> implements Callable<V> {
                     .collect(Collectors.toSet());
             mutableNames.stream()
                     .filter(name -> cached.contains(name.toLowerCase(Locale.ROOT)))
-                    .forEach(name -> this.cache.getByName(name).ifPresent(result::add));
+                    .forEach(name -> this.cache.getByName(name).ifPresent(profile -> {
+                        result.add(profile);
+                        mutableNames.remove(name);
+                    }));
 
-            if (mutableNames.size() == result.size()) {
+            if (mutableNames.isEmpty()) {
                 return result;
             }
         }
