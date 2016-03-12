@@ -62,12 +62,12 @@ public class SpongeConfigManager implements ConfigManager {
     }
 
     public static ConfigRoot getSharedRoot(PluginContainer container) {
-        final String name = container.getId().toLowerCase();
+        final String name = container.getUnqualifiedId().toLowerCase();
         return new SpongeConfigRoot(getMapperFactory(container), name, SpongeImpl.getConfigDir());
     }
 
     public static ConfigRoot getPrivateRoot(PluginContainer container) {
-        final String name = container.getId().toLowerCase();
+        final String name = container.getUnqualifiedId().toLowerCase();
         return new SpongeConfigRoot(getMapperFactory(container), name, SpongeImpl.getConfigDir().resolve(name));
     }
 
