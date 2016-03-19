@@ -236,14 +236,13 @@ public interface PacketFunction {
     };
     PacketFunction USE_ITEM = ((packet, state, player, context) -> {
         final C08PacketPlayerBlockPlacement placePacket = (C08PacketPlayerBlockPlacement) packet;
-        context.getCapturedEntitySupplier().get().ifPresent(capturedEntities -> {
-            final Cause cause = Cause.source(EntitySpawnCause.builder().entity((Player) player).type(InternalSpawnTypes.SPAWN_EGG).build()).build();
-            final SpawnEntityEvent spawnEntityEvent =
-                    state.createSpawnEventPostProcess(cause, ((IMixinWorldServer) player.worldObj).getCauseTracker(), context, ImmutableList.of());
-            if (SpongeImpl.postEvent(spawnEntityEvent)) {
-                
-            }
-        });
+//        context.getCapturedEntitySupplier().get().ifPresent(capturedEntities -> {
+//            final Cause cause = Cause.source(EntitySpawnCause.builder().entity((Player) player).type(InternalSpawnTypes.SPAWN_EGG).build()).build();
+//            final SpawnEntityEvent spawnEntityEvent = state.createEntityEvent(cause, ((IMixinWorldServer) player.worldObj).getCauseTracker(), context);
+//            if (spawnEntityEvent != null && SpongeImpl.postEvent(spawnEntityEvent)) {
+//                final List<Entity> entities = spawnEntityEvent.getEntities();
+//            }
+//        });
 
     });
     PacketFunction HELD_ITEM_CHANGE = ((packet, state, player, context) -> {

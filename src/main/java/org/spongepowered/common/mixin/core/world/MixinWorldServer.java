@@ -637,6 +637,14 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
     }
 
     @Override
+    public boolean forceSpawnEntity(Entity entity) {
+        final net.minecraft.entity.Entity minecraftEntity = (net.minecraft.entity.Entity) entity;
+        final int x = minecraftEntity.getPosition().getX();
+        final int z = minecraftEntity.getPosition().getZ();
+        return forceSpawnEntity(minecraftEntity, x >> 4, z >> 4);
+    }
+
+    @Override
     public SpongeBlockSnapshot createSpongeBlockSnapshot(IBlockState state, IBlockState extended, BlockPos pos, int updateFlag) {
         this.builder.reset();
         Location<org.spongepowered.api.world.World> location = new Location<>((org.spongepowered.api.world.World) this, VecHelper.toVector(pos));

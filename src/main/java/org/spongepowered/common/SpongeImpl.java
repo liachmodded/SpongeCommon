@@ -51,6 +51,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -126,6 +127,14 @@ public final class SpongeImpl {
 
     public static boolean postEvent(Event event) {
         return getGame().getEventManager().post(event);
+    }
+
+    public static <T extends Event> boolean postEvent(T event, Consumer<T> consumer) {
+        if (!postEvent(event)) {
+            consumer.accept(event);
+            return true;
+        }
+        return false;
     }
 
     public static Logger getLogger() {
