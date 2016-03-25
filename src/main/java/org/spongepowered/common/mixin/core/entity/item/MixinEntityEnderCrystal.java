@@ -24,12 +24,44 @@
  */
 package org.spongepowered.common.mixin.core.entity.item;
 
+import com.flowpowered.math.vector.Vector3d;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityEnderCrystal;
 import org.spongepowered.api.entity.EnderCrystal;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.common.interfaces.entity.explosive.IMixinExplosive;
 import org.spongepowered.common.mixin.core.entity.MixinEntity;
 
+import javax.annotation.Nullable;
+
 @Mixin(EntityEnderCrystal.class)
-public abstract class MixinEntityEnderCrystal extends MixinEntity implements EnderCrystal {
+public abstract class MixinEntityEnderCrystal extends MixinEntity implements EnderCrystal, IMixinExplosive {
+
+    private static final String EXPLODE_TARGET = "Lnet/minecraft/world/World;createExplosion"
+            + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
+    private static final float EXPLOSION_STRENGTH = 6;
+
+    // Explosive Impl
+
+    @Override
+    public void detonate() {
+        setDead();
+        onExplode(this.worldObj, null, this.posX, this.posY, this.posZ, EXPLOSION_STRENGTH, true);
+    }
+
+    @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = EXPLODE_TARGET))
+    private net.minecraft.world.Explosion onExplode(net.minecraft.world.World worldObj, @Nullable Entity nil, double x,
+                                                    double y, double z, float strength, boolean smoking) {
+        return detonate(Explosion.builder()
+                .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
+                .radius(strength)
+                .shouldPlaySmoke(smoking))
+                .orElse(null);
+    }
 
 }

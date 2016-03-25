@@ -24,58 +24,92 @@
  */
 package org.spongepowered.common.mixin.core.entity.item;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.spongepowered.api.data.DataQuery.of;
-
+import com.flowpowered.math.vector.Vector3d;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
-import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.explosive.PrimedTNT;
 import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive;
 import org.spongepowered.common.mixin.core.entity.MixinEntity;
 
 import java.util.Optional;
 
 @Mixin(EntityTNTPrimed.class)
-public abstract class MixinEntityTNTPrimed extends MixinEntity implements PrimedTNT {
+public abstract class MixinEntityTNTPrimed extends MixinEntity implements PrimedTNT, IMixinFusedExplosive {
+
+    private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;createExplosion"
+            + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
 
     @Shadow private int fuse;
     @Shadow private EntityLivingBase tntPlacedBy;
     @Shadow public abstract void explode();
 
-
-    private void setFuse(int fuse) {
-        checkArgument(fuse >= 0);
-        this.fuse = fuse;
-    }
-
-    @Override
-    public boolean validateRawData(DataContainer container) {
-        boolean doesSuper = super.validateRawData(container);
-        return doesSuper && container.contains(of("Fuse"));
-    }
-
-    @Override
-    public void setRawData(DataContainer container) throws InvalidDataException {
-        super.setRawData(container);
-        try {
-            setFuse(container.getInt(of("Fuse")).get());
-        } catch (Exception e) {
-            throw new InvalidDataException("Couldn't parse raw data", e);
-        }
-    }
-
-    @Override
-    public void detonate() {
-        this.setDead();
-        this.explode();
-    }
+    private int fuseDuration = 80;
 
     @Override
     public Optional<Living> getDetonator() {
         return Optional.ofNullable((Living) this.tntPlacedBy);
     }
+
+    // FusedExplosive Impl
+
+    @Override
+    public int getFuseDuration() {
+        return this.fuseDuration;
+    }
+
+    @Override
+    public void setFuseDuration(int fuseTicks) {
+        this.fuseDuration = fuseTicks;
+    }
+
+    @Override
+    public int getFuseTicksRemaining() {
+        return this.fuse;
+    }
+
+    @Override
+    public void setFuseTicksRemaining(int fuseTicks) {
+        this.fuse = fuseTicks;
+    }
+
+    @Override
+    public void prime() {
+        // Since this entity is always primed, this just resets the fuse
+        if (shouldPrime()) {
+            setFuseTicksRemaining(this.fuseDuration);
+        }
+    }
+
+    @Override
+    public boolean isPrimed() {
+        return true;
+    }
+
+    @Override
+    public void detonate() {
+        setDead();
+        explode();
+    }
+
+    @Redirect(method = "explode", at = @At(value = "INVOKE", target = EXPLOSION_TARGET))
+    protected net.minecraft.world.Explosion onExplode(net.minecraft.world.World worldObj, Entity self, double x,
+                                                      double y, double z, float strength, boolean smoking) {
+        return detonate(Explosion.builder()
+                .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
+                .sourceExplosive(this)
+                .radius(strength)
+                .shouldPlaySmoke(smoking)
+                .shouldBreakBlocks(smoking))
+                .orElse(null);
+    }
+
 }

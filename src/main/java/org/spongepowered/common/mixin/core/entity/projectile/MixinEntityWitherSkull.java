@@ -24,19 +24,28 @@
  */
 package org.spongepowered.common.mixin.core.entity.projectile;
 
+import com.flowpowered.math.vector.Vector3d;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.EntityWitherSkull;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.GameRules;
 import org.spongepowered.api.entity.projectile.explosive.WitherSkull;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.common.data.util.NbtDataUtil;
 import org.spongepowered.common.interfaces.entity.IMixinGriefer;
+import org.spongepowered.common.interfaces.entity.explosive.IMixinExplosive;
 
 @Mixin(EntityWitherSkull.class)
-public abstract class MixinEntityWitherSkull extends MixinEntityFireball implements WitherSkull {
+public abstract class MixinEntityWitherSkull extends MixinEntityFireball implements WitherSkull, IMixinExplosive {
+
+    private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;newExplosion"
+            + "(Lnet/minecraft/entity/Entity;DDDFZZ)Lnet/minecraft/world/Explosion;";
+    private static final int EXPLOSION_STRENGTH = 1;
 
     private float damage = 0.0f;
     private boolean damageSet = false;
@@ -83,8 +92,28 @@ public abstract class MixinEntityWitherSkull extends MixinEntityFireball impleme
         }
     }
 
-    @Redirect(method = "onImpact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Ljava/lang/String;)Z"))
-    private boolean onCanGrief(GameRules gameRules, String rule) {
-        return gameRules.getBoolean(rule) && ((IMixinGriefer) this).canGrief();
+    // Explosive Impl
+
+    @Override
+    public void detonate() {
+        onExplode(this.worldObj, (Entity) (Object) this, this.posX, this.posY,
+                this.posZ, EXPLOSION_STRENGTH, false, true);
+        setDead();
     }
+
+    @Redirect(method = "onImpact", at = @At(value = "INVOKE", target = EXPLOSION_TARGET))
+    protected net.minecraft.world.Explosion onExplode(net.minecraft.world.World worldObj, Entity self, double x,
+                                                      double y, double z, float strength, boolean flaming,
+                                                      boolean smoking) {
+        boolean griefer = ((IMixinGriefer) this).canGrief();
+        return detonate(Explosion.builder()
+                .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
+                .sourceExplosive(this)
+                .radius(strength)
+                .canCauseFire(flaming)
+                .shouldPlaySmoke(smoking && griefer)
+                .shouldBreakBlocks(smoking && griefer))
+                .orElse(null);
+    }
+
 }

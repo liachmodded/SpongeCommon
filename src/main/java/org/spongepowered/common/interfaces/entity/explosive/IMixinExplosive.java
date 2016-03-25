@@ -22,17 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.core.entity;
+package org.spongepowered.common.interfaces.entity.explosive;
 
-import net.minecraft.entity.item.EntityFireworkRocket;
-import net.minecraft.entity.item.EntityMinecartTNT;
-import net.minecraft.entity.item.EntityTNTPrimed;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.projectile.EntityFireball;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.explosive.Explosive;
-import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.entity.ExplosiveEntityEvent;
+import org.spongepowered.api.world.explosion.Explosion;
 
-@Mixin({EntityFireball.class, EntityTNTPrimed.class, EntityFireworkRocket.class, EntityCreeper.class, EntityMinecartTNT.class})
-public abstract class MixinExplosive extends MixinEntity implements Explosive {
+import java.util.Optional;
+
+public interface IMixinExplosive extends Explosive {
+
+    default Optional<net.minecraft.world.Explosion> detonate(Explosion.Builder builder) {
+        ExplosiveEntityEvent.Detonate event = SpongeEventFactory.createExplosiveEntityEventDetonate(
+                Cause.of(NamedCause.source(this)), builder, this
+        );
+        if (!Sponge.getEventManager().post(event)) {
+            Explosion explosion = event.getExplosionBuilder().build();
+            getWorld().triggerExplosion(explosion);
+            return Optional.of((net.minecraft.world.Explosion) explosion);
+        }
+        return Optional.empty();
+    }
 
 }

@@ -51,6 +51,7 @@ public abstract class AbstractMultiDataProcessor<T extends DataManipulator<T, I>
         }
     }
 
+
     @Override
     public Optional<T> fill(DataHolder dataHolder, T manipulator, MergeFunction overlap) {
         if (!supports(dataHolder)) {

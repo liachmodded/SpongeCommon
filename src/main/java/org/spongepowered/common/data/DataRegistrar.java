@@ -169,6 +169,9 @@ public class DataRegistrar {
 
         // Entity Processors
 
+        dataManager.registerDataProcessorAndImpl(FuseData.class, SpongeFuseData.class, ImmutableFuseData.class,
+                ImmutableSpongeFuseData.class, new FuseDataProcessor());
+
         dataManager.registerDualProcessor(FireworkEffectData.class, SpongeFireworkEffectData.class,
                 ImmutableFireworkEffectData.class, ImmutableSpongeFireworkEffectData.class, new FireworkEffectDataProcessor());
 

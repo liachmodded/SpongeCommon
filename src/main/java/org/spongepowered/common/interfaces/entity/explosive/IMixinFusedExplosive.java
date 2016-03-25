@@ -22,16 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.mixin.core.entity;
+package org.spongepowered.common.interfaces.entity.explosive;
 
-import net.minecraft.entity.item.EntityFireworkRocket;
-import net.minecraft.entity.item.EntityMinecartTNT;
-import net.minecraft.entity.item.EntityTNTPrimed;
-import net.minecraft.entity.monster.EntityCreeper;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.explosive.FusedExplosive;
-import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.entity.ExplosiveEntityEvent;
 
-@Mixin({EntityTNTPrimed.class, EntityCreeper.class, EntityMinecartTNT.class, EntityFireworkRocket.class})
-public abstract class MixinFusedExplosive implements FusedExplosive {
+public interface IMixinFusedExplosive extends IMixinExplosive, FusedExplosive {
+
+    int getFuseDuration();
+
+    void setFuseDuration(int fuseTicks);
+
+    int getFuseTicksRemaining();
+
+    void setFuseTicksRemaining(int fuseTicks);
+
+    default boolean shouldPrime() {
+        ExplosiveEntityEvent.Prime event = SpongeEventFactory.createExplosiveEntityEventPrime(
+                Cause.of(NamedCause.source(this)), this);
+        return !Sponge.getEventManager().post(event);
+    }
 
 }

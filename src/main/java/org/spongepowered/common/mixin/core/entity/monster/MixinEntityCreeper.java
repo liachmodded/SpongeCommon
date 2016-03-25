@@ -24,40 +24,108 @@
  */
 package org.spongepowered.common.mixin.core.entity.monster;
 
+import com.flowpowered.math.vector.Vector3d;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.world.GameRules;
 import org.spongepowered.api.entity.living.monster.Creeper;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.common.interfaces.entity.IMixinGriefer;
+import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive;
 
 @Mixin(EntityCreeper.class)
-public abstract class MixinEntityCreeper extends MixinEntityMob implements Creeper {
+public abstract class MixinEntityCreeper extends MixinEntityMob implements Creeper, IMixinFusedExplosive {
+
+    private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;createExplosion"
+            + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
+    private static final String PRIME_TARGET = "Lnet/minecraft/entity/monster/EntityCreeper;playSound(Ljava/lang/String;FF)V";
 
     @Shadow private int timeSinceIgnited;
-    @Shadow private int fuseTime = 30;
+    @Shadow private int fuseTime;
     @Shadow public abstract void explode();
+    @Shadow public abstract int getCreeperState();
+
+    private int fuseDuration = 30;
+
+    // FusedExplosive Impl
+
     @Override
-    @Shadow public abstract void ignite();
-
-    public void creeper$detonate() {
-        this.explode();
+    public int getFuseDuration() {
+        return this.fuseDuration;
     }
 
-    public void creeper$ignite() {
-        this.ignite();
+    @Override
+    public void setFuseDuration(int fuseTicks) {
+        this.fuseDuration = fuseTicks;
     }
 
-    public void creeper$ignite(int fuseTicks) {
+    @Override
+    public int getFuseTicksRemaining() {
+        return this.fuseTime - this.timeSinceIgnited;
+    }
+
+    @Override
+    public void setFuseTicksRemaining(int fuseTicks) {
+        // Note: The creeper will detonate when timeSinceIgnited >= fuseTime
+        // assuming it is within range of a player. Every tick that the creeper
+        // is not within a range of a player, timeSinceIgnited is decremented
+        // by one until zero.
         this.timeSinceIgnited = 0;
         this.fuseTime = fuseTicks;
-        this.ignite();
     }
 
-    @Redirect(method = "explode", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Ljava/lang/String;)Z"))
-    private boolean onCanGrief(GameRules gameRules, String rule) {
-        return gameRules.getBoolean(rule) && ((IMixinGriefer) this).canGrief();
+    private void prime(String sound, float volume, float pitch) {
+        // Note: This has no effect unless a Player is within range
+        if (shouldPrime()) {
+            playSound(sound, volume, pitch);
+            setFuseTicksRemaining(this.fuseDuration);
+        } else {
+            this.timeSinceIgnited = 0;
+        }
     }
+
+    @Override
+    public void prime() {
+        prime("creeper.primed", 1, 0.5f);
+    }
+
+    @Override
+    public boolean isPrimed() {
+        return getCreeperState() == 1;
+    }
+
+    @Override
+    public void detonate() {
+        explode();
+    }
+
+    @Redirect(method = "explode", at = @At(value = "INVOKE", target = EXPLOSION_TARGET))
+    protected net.minecraft.world.Explosion onExplode(net.minecraft.world.World worldObj, Entity self, double x,
+                                                      double y, double z, float strength, boolean smoking) {
+        return detonate(Explosion.builder()
+                .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
+                .sourceExplosive(this)
+                .radius(strength)
+                .shouldPlaySmoke(smoking)
+                .shouldBreakBlocks(smoking && ((IMixinGriefer) this).canGrief()))
+                .orElse(null);
+    }
+
+    /**
+     * Called when a Creeper first enters it's "primed" state.
+     *
+     * @param sound Prime sound
+     * @param volume Volume level
+     * @param pitch Sound pitch
+     */
+    @Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = PRIME_TARGET))
+    protected void onPrime(EntityCreeper self, String sound, float volume, float pitch) {
+        prime(sound, volume, pitch);
+    }
+
 }
