@@ -38,7 +38,7 @@ public interface IMixinExplosive extends Explosive {
 
     default Optional<net.minecraft.world.Explosion> detonate(Explosion.Builder builder) {
         ExplosiveEntityEvent.Detonate event = SpongeEventFactory.createExplosiveEntityEventDetonate(
-                Cause.of(NamedCause.source(this)), builder, this
+                Cause.of(NamedCause.source(this)), builder, builder.build(), this
         );
         if (!Sponge.getEventManager().post(event)) {
             Explosion explosion = event.getExplosionBuilder().build();
