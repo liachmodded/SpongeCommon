@@ -42,6 +42,8 @@ import org.spongepowered.common.data.util.NbtDataUtil;
 import org.spongepowered.common.interfaces.entity.IMixinGriefer;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinExplosive;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 @Mixin(EntityLargeFireball.class)
@@ -49,6 +51,7 @@ public abstract class MixinEntityLargeFireball extends MixinEntityFireball imple
 
     private static final String EXPLOSION_TARGET =
         "Lnet/minecraft/world/World;newExplosion(Lnet/minecraft/entity/Entity;DDDFZZ)Lnet/minecraft/world/Explosion;";
+    private static final int DEFAULT_EXPLOSION_RADIUS = 1;
 
     @Shadow public int explosionPower;
 
@@ -80,6 +83,16 @@ public abstract class MixinEntityLargeFireball extends MixinEntityFireball imple
     }
 
     // Explosive Impl
+
+    @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionPower);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionPower = radius.orElse(DEFAULT_EXPLOSION_RADIUS);
+    }
 
     @Override
     public void detonate() {

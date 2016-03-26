@@ -307,6 +307,7 @@ public class KeyRegistry {
         keyMap.put("targeted_location", makeSingleKey(Vector3d.class, Value.class, of("TargetedVector3d")));
         keyMap.put("fuse_duration", makeSingleKey(Integer.class, Value.class, of("FuseDuration")));
         keyMap.put("ticks_remaining", makeSingleKey(Integer.class, Value.class, of("TicksRemaining")));
+        keyMap.put("explosion_radius", makeSingleKey(Integer.class, Value.class, of("ExplosionRadius")));
     }
 
     @SuppressWarnings("unused") // Used in DataTestUtil.generateKeyMap

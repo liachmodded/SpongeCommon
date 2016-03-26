@@ -47,11 +47,13 @@ public abstract class MixinEntityTNTPrimed extends MixinEntity implements Primed
 
     private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;createExplosion"
             + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
+    private static final int DEFAULT_EXPLOSION_RADIUS = 4;
 
     @Shadow private int fuse;
     @Shadow private EntityLivingBase tntPlacedBy;
     @Shadow public abstract void explode();
 
+    private int explosionRadius = DEFAULT_EXPLOSION_RADIUS;
     private int fuseDuration = 80;
 
     @Override
@@ -60,6 +62,16 @@ public abstract class MixinEntityTNTPrimed extends MixinEntity implements Primed
     }
 
     // FusedExplosive Impl
+
+    @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionRadius);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionRadius = radius.orElse(DEFAULT_EXPLOSION_RADIUS);
+    }
 
     @Override
     public int getFuseDuration() {
@@ -91,7 +103,7 @@ public abstract class MixinEntityTNTPrimed extends MixinEntity implements Primed
 
     @Override
     public boolean isPrimed() {
-        return true;
+        return !this.isDead;
     }
 
     @Override
@@ -106,7 +118,7 @@ public abstract class MixinEntityTNTPrimed extends MixinEntity implements Primed
         return detonate(Explosion.builder()
                 .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
                 .sourceExplosive(this)
-                .radius(strength)
+                .radius(this.explosionRadius)
                 .shouldPlaySmoke(smoking)
                 .shouldBreakBlocks(smoking))
                 .orElse(null);

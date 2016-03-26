@@ -39,6 +39,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive;
 
+import java.util.Optional;
+
 @Mixin(EntityMinecartTNT.class)
 public abstract class MixinEntityMinecartTNT extends MixinEntityMinecart implements TNTMinecart, IMixinFusedExplosive {
 
@@ -49,7 +51,18 @@ public abstract class MixinEntityMinecartTNT extends MixinEntityMinecart impleme
     @Shadow public abstract void ignite();
     @Shadow public abstract boolean isIgnited();
 
+    private Optional<Integer> explosionRadius = Optional.empty();
     private int fuseDuration = 80;
+
+    @Override
+    public Optional<Integer> getExplosionRadius() {
+        return this.explosionRadius;
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionRadius = radius;
+    }
 
     @Override
     public int getFuseDuration() {
@@ -92,7 +105,7 @@ public abstract class MixinEntityMinecartTNT extends MixinEntityMinecart impleme
         return detonate(Explosion.builder()
                 .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
                 .sourceExplosive(this)
-                .radius(strength)
+                .radius(explosionRadius.isPresent() ? explosionRadius.get() : strength)
                 .shouldPlaySmoke(smoking)
                 .shouldBreakBlocks(smoking))
                 .orElse(null);

@@ -47,13 +47,16 @@ import org.spongepowered.common.mixin.core.entity.monster.MixinEntityMob;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Mixin(value = EntityWither.class)
 public abstract class MixinEntityWither extends MixinEntityMob implements Wither, IMixinFusedExplosive {
 
     private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;newExplosion"
             + "(Lnet/minecraft/entity/Entity;DDDFZZ)Lnet/minecraft/world/Explosion;";
+    private static final int DEFAULT_EXPLOSION_RADIUS = 7;
 
+    private int explosionRadius = DEFAULT_EXPLOSION_RADIUS;
     private int fuseDuration = 220;
 
     @Shadow public abstract int getWatchedTargetId(int p_82203_1_);
@@ -95,6 +98,16 @@ public abstract class MixinEntityWither extends MixinEntityMob implements Wither
     }
 
     // FusedExplosive Impl
+
+    @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionRadius);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionRadius = radius.orElse(DEFAULT_EXPLOSION_RADIUS);
+    }
 
     @Override
     public int getFuseDuration() {
@@ -152,7 +165,7 @@ public abstract class MixinEntityWither extends MixinEntityMob implements Wither
         return detonate(Explosion.builder()
                 .sourceExplosive(this)
                 .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
-                .radius(strength)
+                .radius(this.explosionRadius)
                 .canCauseFire(flaming)
                 .shouldPlaySmoke(smoking)
                 .shouldBreakBlocks(smoking && ((IMixinGriefer) this).canGrief()))

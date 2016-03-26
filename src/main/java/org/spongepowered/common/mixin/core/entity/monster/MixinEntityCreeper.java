@@ -38,21 +38,35 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.common.interfaces.entity.IMixinGriefer;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive;
 
+import java.util.Optional;
+
 @Mixin(EntityCreeper.class)
 public abstract class MixinEntityCreeper extends MixinEntityMob implements Creeper, IMixinFusedExplosive {
 
     private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;createExplosion"
             + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
     private static final String PRIME_TARGET = "Lnet/minecraft/entity/monster/EntityCreeper;playSound(Ljava/lang/String;FF)V";
+    private static final int DEFAULT_EXPLOSION_RADIUS = 3;
 
     @Shadow private int timeSinceIgnited;
     @Shadow private int fuseTime;
+    @Shadow private int explosionRadius;
     @Shadow public abstract void explode();
     @Shadow public abstract int getCreeperState();
 
     private int fuseDuration = 30;
 
     // FusedExplosive Impl
+
+    @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionRadius);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionRadius = radius.orElse(DEFAULT_EXPLOSION_RADIUS);
+    }
 
     @Override
     public int getFuseDuration() {

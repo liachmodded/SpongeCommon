@@ -34,15 +34,19 @@ import org.spongepowered.api.world.explosion.Explosion;
 
 import java.util.Optional;
 
-public interface IMixinExplosive extends Explosive {
+public interface IMixinExplosive {
+
+    Optional<Integer> getExplosionRadius();
+
+    void setExplosionRadius(Optional<Integer> radius);
 
     default Optional<net.minecraft.world.Explosion> detonate(Explosion.Builder builder) {
         ExplosiveEntityEvent.Detonate event = SpongeEventFactory.createExplosiveEntityEventDetonate(
-                Cause.of(NamedCause.source(this)), builder, builder.build(), this
+                Cause.of(NamedCause.source(this)), builder, builder.build(), (Explosive) this
         );
         if (!Sponge.getEventManager().post(event)) {
             Explosion explosion = event.getExplosionBuilder().build();
-            getWorld().triggerExplosion(explosion);
+            ((Explosive) this).getWorld().triggerExplosion(explosion);
             return Optional.of((net.minecraft.world.Explosion) explosion);
         }
         return Optional.empty();

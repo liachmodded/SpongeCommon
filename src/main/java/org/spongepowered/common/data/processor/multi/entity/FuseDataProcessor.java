@@ -34,6 +34,7 @@ import org.spongepowered.api.data.key.Key;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.immutable.entity.ImmutableFuseData;
 import org.spongepowered.api.data.manipulator.mutable.entity.FuseData;
+import org.spongepowered.api.entity.explosive.FusedExplosive;
 import org.spongepowered.common.data.manipulator.mutable.entity.SpongeFuseData;
 import org.spongepowered.common.data.processor.common.AbstractMultiDataSingleTargetProcessor;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive;
@@ -41,35 +42,37 @@ import org.spongepowered.common.interfaces.entity.explosive.IMixinFusedExplosive
 import java.util.Map;
 import java.util.Optional;
 
-public class FuseDataProcessor extends AbstractMultiDataSingleTargetProcessor<IMixinFusedExplosive, FuseData, ImmutableFuseData> {
+public class FuseDataProcessor extends AbstractMultiDataSingleTargetProcessor<FusedExplosive, FuseData, ImmutableFuseData> {
 
     public FuseDataProcessor() {
-        super(IMixinFusedExplosive.class);
+        super(FusedExplosive.class);
     }
 
     @Override
-    protected boolean doesDataExist(IMixinFusedExplosive dataHolder) {
+    protected boolean doesDataExist(FusedExplosive dataHolder) {
         return true;
     }
 
     @Override
-    protected boolean set(IMixinFusedExplosive explosive, Map<Key<?>, Object> keyValues) {
+    protected boolean set(FusedExplosive explosive, Map<Key<?>, Object> keyValues) {
         Integer fuseDuration = (Integer) keyValues.get(Keys.FUSE_DURATION);
         Integer ticksRemaining = (Integer) keyValues.get(Keys.TICKS_REMAINING);
 
-        explosive.setFuseDuration(fuseDuration);
+        IMixinFusedExplosive mixin = (IMixinFusedExplosive) explosive;
+        mixin.setFuseDuration(fuseDuration);
         if (explosive.isPrimed()) {
-            explosive.setFuseTicksRemaining(ticksRemaining);
+            mixin.setFuseTicksRemaining(ticksRemaining);
         }
         
         return true;
     }
 
     @Override
-    protected Map<Key<?>, ?> getValues(IMixinFusedExplosive explosive) {
+    protected Map<Key<?>, ?> getValues(FusedExplosive explosive) {
+        IMixinFusedExplosive mixin = (IMixinFusedExplosive) explosive;
         return ImmutableMap.of(
-                Keys.FUSE_DURATION, explosive.getFuseDuration(),
-                Keys.TICKS_REMAINING, explosive.getFuseTicksRemaining()
+                Keys.FUSE_DURATION, mixin.getFuseDuration(),
+                Keys.TICKS_REMAINING, mixin.getFuseTicksRemaining()
         );
     }
 

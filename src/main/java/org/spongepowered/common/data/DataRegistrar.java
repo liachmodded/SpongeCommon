@@ -172,6 +172,9 @@ public class DataRegistrar {
         dataManager.registerDataProcessorAndImpl(FuseData.class, SpongeFuseData.class, ImmutableFuseData.class,
                 ImmutableSpongeFuseData.class, new FuseDataProcessor());
 
+        dataManager.registerDualProcessor(ExplosionRadiusData.class, SpongeExplosionRadiusData.class, ImmutableExplosionRadiusData.class,
+                ImmutableSpongeExplosionRadiusData.class, new ExplosionRadiusDataProcessor());
+
         dataManager.registerDualProcessor(FireworkEffectData.class, SpongeFireworkEffectData.class,
                 ImmutableFireworkEffectData.class, ImmutableSpongeFireworkEffectData.class, new FireworkEffectDataProcessor());
 

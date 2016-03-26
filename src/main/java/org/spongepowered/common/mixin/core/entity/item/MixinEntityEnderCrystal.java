@@ -37,6 +37,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinExplosive;
 import org.spongepowered.common.mixin.core.entity.MixinEntity;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 @Mixin(EntityEnderCrystal.class)
@@ -44,14 +46,26 @@ public abstract class MixinEntityEnderCrystal extends MixinEntity implements End
 
     private static final String EXPLODE_TARGET = "Lnet/minecraft/world/World;createExplosion"
             + "(Lnet/minecraft/entity/Entity;DDDFZ)Lnet/minecraft/world/Explosion;";
-    private static final float EXPLOSION_STRENGTH = 6;
+    private static final int DEFAULT_EXPLOSION_STRENGTH = 6;
+
+    private int explosionStrength = DEFAULT_EXPLOSION_STRENGTH;
 
     // Explosive Impl
 
     @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionStrength);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> radius) {
+        this.explosionStrength = radius.orElse(DEFAULT_EXPLOSION_STRENGTH);
+    }
+
+    @Override
     public void detonate() {
         setDead();
-        onExplode(this.worldObj, null, this.posX, this.posY, this.posZ, EXPLOSION_STRENGTH, true);
+        onExplode(this.worldObj, null, this.posX, this.posY, this.posZ, this.explosionStrength, true);
     }
 
     @Redirect(method = "attackEntityFrom", at = @At(value = "INVOKE", target = EXPLODE_TARGET))
@@ -59,7 +73,7 @@ public abstract class MixinEntityEnderCrystal extends MixinEntity implements End
                                                     double y, double z, float strength, boolean smoking) {
         return detonate(Explosion.builder()
                 .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
-                .radius(strength)
+                .radius(this.explosionStrength)
                 .shouldPlaySmoke(smoking))
                 .orElse(null);
     }

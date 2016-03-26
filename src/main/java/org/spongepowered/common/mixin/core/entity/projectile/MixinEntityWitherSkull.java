@@ -40,13 +40,16 @@ import org.spongepowered.common.data.util.NbtDataUtil;
 import org.spongepowered.common.interfaces.entity.IMixinGriefer;
 import org.spongepowered.common.interfaces.entity.explosive.IMixinExplosive;
 
+import java.util.Optional;
+
 @Mixin(EntityWitherSkull.class)
 public abstract class MixinEntityWitherSkull extends MixinEntityFireball implements WitherSkull, IMixinExplosive {
 
     private static final String EXPLOSION_TARGET = "Lnet/minecraft/world/World;newExplosion"
             + "(Lnet/minecraft/entity/Entity;DDDFZZ)Lnet/minecraft/world/Explosion;";
-    private static final int EXPLOSION_STRENGTH = 1;
+    private static final int DEFAULT_EXPLOSION_RADIUS = 1;
 
+    private int explosionRadius = DEFAULT_EXPLOSION_RADIUS;
     private float damage = 0.0f;
     private boolean damageSet = false;
 
@@ -95,9 +98,18 @@ public abstract class MixinEntityWitherSkull extends MixinEntityFireball impleme
     // Explosive Impl
 
     @Override
+    public Optional<Integer> getExplosionRadius() {
+        return Optional.of(this.explosionRadius);
+    }
+
+    @Override
+    public void setExplosionRadius(Optional<Integer> explosionRadius) {
+        this.explosionRadius = explosionRadius.orElse(DEFAULT_EXPLOSION_RADIUS);
+    }
+
+    @Override
     public void detonate() {
-        onExplode(this.worldObj, (Entity) (Object) this, this.posX, this.posY,
-                this.posZ, EXPLOSION_STRENGTH, false, true);
+        onExplode(this.worldObj, (Entity) (Object) this, this.posX, this.posY, this.posZ, 0, false, true);
         setDead();
     }
 
@@ -109,7 +121,7 @@ public abstract class MixinEntityWitherSkull extends MixinEntityFireball impleme
         return detonate(Explosion.builder()
                 .location(new Location<>((World) worldObj, new Vector3d(x, y, z)))
                 .sourceExplosive(this)
-                .radius(strength)
+                .radius(this.explosionRadius)
                 .canCauseFire(flaming)
                 .shouldPlaySmoke(smoking && griefer)
                 .shouldBreakBlocks(smoking && griefer))

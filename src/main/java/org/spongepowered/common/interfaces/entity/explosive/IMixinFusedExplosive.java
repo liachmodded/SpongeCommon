@@ -31,7 +31,7 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.ExplosiveEntityEvent;
 
-public interface IMixinFusedExplosive extends IMixinExplosive, FusedExplosive {
+public interface IMixinFusedExplosive extends IMixinExplosive {
 
     int getFuseDuration();
 
@@ -43,7 +43,7 @@ public interface IMixinFusedExplosive extends IMixinExplosive, FusedExplosive {
 
     default boolean shouldPrime() {
         ExplosiveEntityEvent.Prime event = SpongeEventFactory.createExplosiveEntityEventPrime(
-                Cause.of(NamedCause.source(this)), this);
+                Cause.of(NamedCause.source(this)), (FusedExplosive) this);
         return !Sponge.getEventManager().post(event);
     }
 
