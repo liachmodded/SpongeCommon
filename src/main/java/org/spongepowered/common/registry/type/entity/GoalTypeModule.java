@@ -28,81 +28,95 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import org.spongepowered.api.entity.ai.GoalExecutor;
-import org.spongepowered.api.entity.ai.GoalExecutorType;
-import org.spongepowered.api.entity.ai.GoalExecutorTypes;
+import org.spongepowered.api.CatalogKey;
+import org.spongepowered.api.entity.ai.goal.Goal;
+import org.spongepowered.api.entity.ai.goal.GoalType;
+import org.spongepowered.api.entity.ai.goal.GoalTypes;
+import org.spongepowered.api.entity.ai.goal.builtin.SwimGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.creature.AttackLivingGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.creature.AvoidLivingGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.creature.RandomWalkingGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.LookAtGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.creature.horse.RunAroundLikeCrazyGoal;
+import org.spongepowered.api.entity.ai.goal.builtin.creature.target.FindNearestAttackableTargetGoal;
+import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.registry.AlternateCatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.SpongeImpl;
-import org.spongepowered.common.entity.ai.SpongeGoalExecutorType;
+import org.spongepowered.common.entity.ai.goal.SpongeGoalType;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.entity.ai.goal.GoalSelector;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class GoalTypeModule implements AlternateCatalogRegistryModule<GoalExecutorType> {
+public class GoalTypeModule implements AlternateCatalogRegistryModule<GoalType> {
 
     public static GoalTypeModule getInstance() {
         return Holder.INSTANCE;
     }
 
-    @RegisterCatalog(GoalExecutorTypes.class)
-    private final Map<String, GoalExecutorType> goalTypes = new HashMap<>();
+    @RegisterCatalog(GoalTypes.class)
+    private final Map<CatalogKey, GoalType> goalTypes = new ConcurrentHashMap<>();
 
     @Override
-    public Map<String, GoalExecutorType> provideCatalogMap() {
-        Map<String, GoalExecutorType> goalMap = new HashMap<>();
-        for (Map.Entry<String, GoalExecutorType> entry : this.goalTypes.entrySet()) {
-            goalMap.put(entry.getKey().replace("minecraft:", ""), entry.getValue());
-        }
-        return goalMap;
+    public Map<CatalogKey, GoalType> provideCatalogMap() {
+        return new HashMap<>(this.goalTypes);
     }
 
     @Override
-    public Optional<GoalExecutorType> getById(String id) {
-        checkNotNull(id);
-        if (!id.contains(":")) {
-            id = "minecraft:" + id; // assume vanilla
-        }
-        return Optional.ofNullable(this.goalTypes.get(id.toLowerCase(Locale.ENGLISH)));
+    public Optional<GoalType> get(CatalogKey key) {
+        checkNotNull(key);
+        return Optional.ofNullable(this.goalTypes.get(key));
     }
 
     @Override
-    public Collection<GoalExecutorType> getAll() {
+    public Collection<GoalType> getAll() {
         return ImmutableList.copyOf(this.goalTypes.values());
+    }
+
+    public Optional<GoalType> getByGoalClass(Class<?> clazz) {
+        for (GoalType type : this.goalTypes.values()) {
+            if (type.getGoalClass().isAssignableFrom(clazz)) {
+                return Optional.of(type);
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
     public void registerDefaults() {
-        this.createGoalType("minecraft:normal", "Normal");
-        this.createGoalType("minecraft:target", "Target");
+        // todo bork
+        this.createGoalType("minecraft:wander", "Wander", RandomWalkingGoal.class);
+        this.createGoalType("minecraft:avoid_entity", "Avoid Entity", AvoidLivingGoal.class);
+        this.createGoalType("minecraft:run_around_like_crazy", "Run Around Like Crazy", RunAroundLikeCrazyGoal.class);
+        this.createGoalType("minecraft:swimming", "Swimming", SwimGoal.class);
+        this.createGoalType("minecraft:watch_closest", "Watch Closest", LookAtGoal.class);
+        this.createGoalType("minecraft:find_nearest_attackable_target", "Find Nearest Attackable Target", FindNearestAttackableTargetGoal.class);
+        this.createGoalType("minecraft:attack_living", "Attack Living", AttackLivingGoal.class);
     }
 
-    private GoalExecutorType createGoalType(String combinedId, String name) {
-        @SuppressWarnings("unchecked")
-        final SpongeGoalExecutorType newType = new SpongeGoalExecutorType(combinedId, name, (Class<GoalExecutor<?>>) (Class<?>) GoalSelector.class);
+    private GoalType createGoalType(CatalogKey combinedId, Class<? extends Goal<? extends Agent>> aiClass) {
+        final SpongeGoalType newType = new SpongeGoalType(combinedId, aiClass);
         this.goalTypes.put(combinedId, newType);
         return newType;
     }
 
-    public GoalExecutorType createGoalType(Object plugin, String id, String name) {
+    public GoalType createGoalType(Object plugin, String id, Class<? extends Goal<? extends Agent>> aiClass) {
         final Optional<PluginContainer> optPluginContainer = SpongeImpl.getGame().getPluginManager().fromInstance(plugin);
         Preconditions.checkArgument(optPluginContainer.isPresent());
         final PluginContainer pluginContainer = optPluginContainer.get();
-        final String combinedId = pluginContainer.getId().toLowerCase(Locale.ENGLISH) + ":" + id;
+        final CatalogKey combinedId = CatalogKey.builder().namespace(pluginContainer).value(id).build();
 
-        return this.createGoalType(combinedId, name);
+        return this.createGoalType(combinedId, aiClass);
     }
 
-    GoalTypeModule() {
-    }
+    GoalTypeModule() {}
 
     private static final class Holder {
-
         static final GoalTypeModule INSTANCE = new GoalTypeModule();
     }
 }

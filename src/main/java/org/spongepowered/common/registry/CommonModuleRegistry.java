@@ -288,14 +288,14 @@ import org.spongepowered.common.registry.type.effect.PotionEffectTypeRegistryMod
 import org.spongepowered.common.registry.type.effect.RecordTypeRegistryModule;
 import org.spongepowered.common.registry.type.effect.SoundCategoryRegistryModule;
 import org.spongepowered.common.registry.type.effect.SoundRegistryModule;
-import org.spongepowered.common.registry.type.entity.AITaskTypeModule;
+import org.spongepowered.common.registry.type.entity.GoalTypeModule;
 import org.spongepowered.common.registry.type.entity.ArtRegistryModule;
 import org.spongepowered.common.registry.type.entity.BodyPartRegistryModule;
 import org.spongepowered.common.registry.type.entity.CareerRegistryModule;
 import org.spongepowered.common.registry.type.entity.EnderDragonPhaseTypeRegistryModule;
 import org.spongepowered.common.registry.type.entity.EntityTypeRegistryModule;
 import org.spongepowered.common.registry.type.entity.GameModeRegistryModule;
-import org.spongepowered.common.registry.type.entity.GoalTypeModule;
+import org.spongepowered.common.registry.type.entity.GoalExecutorTypeModule;
 import org.spongepowered.common.registry.type.entity.HorseColorRegistryModule;
 import org.spongepowered.common.registry.type.entity.HorseStyleRegistryModule;
 import org.spongepowered.common.registry.type.entity.OcelotTypeRegistryModule;
@@ -531,7 +531,7 @@ public final class CommonModuleRegistry {
         registry.registerModule(new ArgumentRegistryModule())
                 .registerModule(BlockChangeFlagRegistryModule.getInstance())
                 .registerModule(ChunkRegenerateFlagRegistryModule.getInstance())
-                .registerModule(GoalType.class, AITaskTypeModule.getInstance())
+                .registerModule(GoalType.class, GoalTypeModule.getInstance())
                 .registerModule(ArmorType.class, new ArmorTypeRegistryModule())
                 .registerModule(ArtType.class, new ArtRegistryModule())
                 .registerModule(BanType.class, new BanTypeRegistryModule())
@@ -572,7 +572,7 @@ public final class CommonModuleRegistry {
                 .registerModule(FluidType.class, FluidTypeRegistryModule.getInstance())
                 .registerModule(GameMode.class, new GameModeRegistryModule())
                 .registerModule(org.spongepowered.api.world.gen.GeneratorType.class, GeneratorTypeRegistryModule.getInstance())
-                .registerModule(GoalExecutorType.class, GoalTypeModule.getInstance())
+                .registerModule(GoalExecutorType.class, GoalExecutorTypeModule.getInstance())
                 .registerModule(GoldenApple.class, new GoldenAppleRegistryModule())
                 .registerModule(Hinge.class, new HingeRegistryModule())
                 .registerModule(IntegerStateProperty.class, IntegerTraitRegistryModule.getInstance())

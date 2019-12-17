@@ -45,26 +45,29 @@ import org.spongepowered.common.event.ShouldFire;
 import org.spongepowered.common.bridge.entity.ai.GoalSelectorBridge;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.goal.Goal.Flag;
 import net.minecraft.entity.ai.goal.GoalSelector;
-import net.minecraft.entity.ai.goal.GoalSelector.EntityAITaskEntry;
+import net.minecraft.entity.ai.goal.PrioritizedGoal;
+import net.minecraft.entity.ai.goal.PrioritizedGoal;
 
 @Mixin(GoalSelector.class)
 public abstract class GoalSelectorMixin implements GoalSelectorBridge {
 
-    @Shadow @Final private Set<GoalSelector.EntityAITaskEntry> taskEntries;
-    @Shadow @Final private Set<GoalSelector.EntityAITaskEntry> executingTaskEntries;
+    @Shadow @Final private Set<PrioritizedGoal> goals;
+    @Shadow @Final private Map<Flag, PrioritizedGoal> flagGoals;
 
     @Nullable private MobEntity owner;
     @Nullable private GoalExecutorType type;
     private boolean initialized;
 
     @Override
-    public Set<GoalSelector.EntityAITaskEntry> bridge$getTasksUnsafe() {
-        return this.taskEntries;
+    public Set<PrioritizedGoal> bridge$getTasksUnsafe() {
+        return this.goals;
     }
 
     /**
@@ -78,11 +81,11 @@ public abstract class GoalSelectorMixin implements GoalSelectorBridge {
      * @return
      */
     @Redirect(method = "addTask", at = @At(value = "INVOKE", target =  "Ljava/util/Set;add(Ljava/lang/Object;)Z", remap = false))
-    private boolean onAddEntityTask(final Set<GoalSelector.EntityAITaskEntry> set, final Object entry, final int priority, final net.minecraft.entity.ai.goal.Goal base) {
+    private boolean onAddEntityTask(final Set<PrioritizedGoal> set, final Object entry, final int priority, final net.minecraft.entity.ai.goal.Goal base) {
         ((GoalBridge) base).bridge$setGoalExecutor((GoalExecutor<?>) this);
         if (!ShouldFire.A_I_TASK_EVENT_ADD || this.owner == null || ((EntityBridge) this.owner).bridge$isConstructing()) {
             // Event is fired in bridge$fireConstructors
-            return set.add(((GoalSelector) (Object) this).new EntityAITaskEntry(priority, base));
+            return set.add(new PrioritizedGoal(priority, base));
         }
         final AITaskEvent.Add event = SpongeEventFactory.createAITaskEventAdd(Sponge.getCauseStackManager().getCurrentCause(), priority, priority,
                 (GoalExecutor<?>) this, (Agent) this.owner, (Goal<?>) base);
@@ -91,7 +94,7 @@ public abstract class GoalSelectorMixin implements GoalSelectorBridge {
             ((GoalBridge) base).bridge$setGoalExecutor(null);
             return false;
         }
-        return set.add(((GoalSelector) (Object) this).new EntityAITaskEntry(event.getPriority(), base));
+        return set.add(new PrioritizedGoal(event.getPriority(), base));
     }
 
     @Override
@@ -124,11 +127,11 @@ public abstract class GoalSelectorMixin implements GoalSelectorBridge {
     @SuppressWarnings({"rawtypes"})
     @Overwrite
     public void removeTask(final net.minecraft.entity.ai.goal.Goal aiBase) {
-        final Iterator iterator = this.taskEntries.iterator();
+        final Iterator iterator = this.goals.iterator();
 
         while (iterator.hasNext()) {
-            final GoalSelector.EntityAITaskEntry entityaitaskentry = (GoalSelector.EntityAITaskEntry)iterator.next();
-            final net.minecraft.entity.ai.goal.Goal otherAiBase = entityaitaskentry.action;
+            final PrioritizedGoal entityaitaskentry = (PrioritizedGoal)iterator.next();
+            final net.minecraft.entity.ai.goal.Goal otherAiBase = entityaitaskentry.getGoal();
 
             // Sponge start
             if (otherAiBase.equals(aiBase)) {
@@ -140,10 +143,9 @@ public abstract class GoalSelectorMixin implements GoalSelectorBridge {
                 }
                 if (event == null || !event.isCancelled()) {
 
-                    if (entityaitaskentry.using) {
-                        entityaitaskentry.using = false;
-                        otherAiBase.resetTask();
-                        this.executingTaskEntries.remove(entityaitaskentry);
+                    if (entityaitaskentry.isRunning()) {
+                        entityaitaskentry.resetTask();
+                        this.flagGoals.remove(entityaitaskentry);
                     }
 
                     iterator.remove();
@@ -164,8 +166,8 @@ public abstract class GoalSelectorMixin implements GoalSelectorBridge {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Overwrite
-    private boolean areTasksCompatible(final GoalSelector.EntityAITaskEntry taskEntry1, final GoalSelector.EntityAITaskEntry taskEntry2) {
-        return (((Goal) taskEntry2.action).canRunConcurrentWith((Goal) taskEntry1.action));
+    private boolean areTasksCompatible(final PrioritizedGoal taskEntry1, final PrioritizedGoal taskEntry2) {
+        return (((Goal) taskEntry2.getGoal()).canRunConcurrentWith((Goal) taskEntry1.getGoal()));
     }
 
     @Override

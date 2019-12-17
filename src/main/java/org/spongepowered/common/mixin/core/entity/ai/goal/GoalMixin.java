@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.bridge.entity.ai.GoalBridge;
-import org.spongepowered.common.registry.type.entity.AITaskTypeModule;
+import org.spongepowered.common.registry.type.entity.GoalTypeModule;
 
 import java.util.Optional;
 
@@ -46,7 +46,7 @@ public abstract class GoalMixin implements GoalBridge {
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     public void assignAITaskType(final CallbackInfo ci) {
-        final Optional<GoalType> optAiTaskType = AITaskTypeModule.getInstance().getByAIClass(this.getClass());
+        final Optional<GoalType> optAiTaskType = GoalTypeModule.getInstance().getByGoalClass(this.getClass());
         if (optAiTaskType.isPresent()) {
             this.impl$type = optAiTaskType.get();
         }

@@ -94,7 +94,7 @@ import org.spongepowered.common.event.registry.SpongeGameRegistryRegisterEvent;
 import org.spongepowered.common.item.recipe.crafting.SpongeCraftingRecipeRegistry;
 import org.spongepowered.common.network.status.SpongeFavicon;
 import org.spongepowered.common.registry.type.block.RotationRegistryModule;
-import org.spongepowered.common.registry.type.entity.AITaskTypeModule;
+import org.spongepowered.common.registry.type.entity.GoalTypeModule;
 import org.spongepowered.common.registry.type.scoreboard.DisplaySlotRegistryModule;
 import org.spongepowered.common.registry.util.RegistryModuleLoader;
 import org.spongepowered.common.text.selector.SpongeSelectorFactory;
@@ -465,7 +465,7 @@ public class SpongeGameRegistry implements GameRegistry {
     @Override
     public GoalType registerAITaskType(Object plugin, String id, String name, Class<? extends AbstractGoal<? extends Agent>> aiClass) {
 
-        return AITaskTypeModule.getInstance().createAITaskType(plugin, id, name, aiClass);
+        return GoalTypeModule.getInstance().createGoalType(plugin, id, name, aiClass);
     }
 
     @Override
