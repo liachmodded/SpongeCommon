@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.item.Item;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -43,54 +44,29 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-public final class ItemTypeRegistryModule implements SpongeAdditionalCatalogRegistryModule<ItemType>, AlternateCatalogRegistryModule<ItemType> {
+public final class ItemTypeRegistryModule extends AbstractCatalogRegistryModule<ItemType> implements SpongeAdditionalCatalogRegistryModule<ItemType>, AlternateCatalogRegistryModule<ItemType> {
 
-    public final ItemStack NONE = (ItemStack) net.minecraft.item.ItemStack.EMPTY;
+    public final ItemStack NONE = (ItemStack) (Object) net.minecraft.item.ItemStack.EMPTY;
     public final ItemStackSnapshot NONE_SNAPSHOT = this.NONE.createSnapshot();
 
     public static ItemTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
-    @RegisterCatalog(ItemTypes.class)
-    private final Map<String, ItemType> itemTypeMappings = new HashMap<>();
-
     @Override
-    public Map<String, ItemType> provideCatalogMap() {
-        Map<String, ItemType> itemTypeMap = new HashMap<>();
-        for (Map.Entry<String, ItemType> entry : this.itemTypeMappings.entrySet()) {
-            itemTypeMap.put(entry.getKey().replace("minecraft:", ""), entry.getValue());
-        }
-        itemTypeMap.put("none", this.NONE.getType());
+    public Map<CatalogKey, ItemType> provideCatalogMap() {
+        Map<CatalogKey, ItemType> itemTypeMap = super.provideCatalogMap();
+        itemTypeMap.put(CatalogKey.minecraft("none"), this.NONE.getType());
         return itemTypeMap;
     }
 
-    @Override
-    public Optional<ItemType> getById(String id) {
-        checkNotNull(id);
-        if (!id.contains(":")) {
-            id = "minecraft:" + id.toLowerCase(Locale.ENGLISH); // assume vanilla
-        }
-        return Optional.ofNullable(this.itemTypeMappings.get(id));
-    }
-
-    @Override
-    public Collection<ItemType> getAll() {
-        return ImmutableList.copyOf(this.itemTypeMappings.values());
-    }
-
     public void registerFromGameData(String id, ItemType itemType) {
-        this.itemTypeMappings.put(id.toLowerCase(Locale.ENGLISH), itemType);
+        // todo
     }
 
     @Override
     public boolean allowsApiRegistration() {
         return false;
-    }
-
-    @Override
-    public void registerAdditionalCatalog(ItemType extraCatalog) {
-        this.itemTypeMappings.put(extraCatalog.getId().toLowerCase(Locale.ENGLISH), extraCatalog);
     }
 
     @Override

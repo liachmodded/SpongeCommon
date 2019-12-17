@@ -33,6 +33,8 @@ import com.google.common.collect.Maps;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.state.IProperty;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -62,42 +64,16 @@ import java.util.Map;
 import java.util.Optional;
 
 @RegistrationDependency(BlockChangeFlagRegistryModule.class)
-public class BlockTypeRegistryModule implements SpongeAdditionalCatalogRegistryModule<BlockType>, AlternateCatalogRegistryModule<BlockType> {
+public class BlockTypeRegistryModule extends AbstractCatalogRegistryModule<BlockType> implements SpongeAdditionalCatalogRegistryModule<BlockType>, AlternateCatalogRegistryModule<BlockType> {
 
     public static BlockTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
-    @RegisterCatalog(BlockTypes.class)
-    private final Map<String, BlockType> blockTypeMappings = Maps.newHashMap();
-
     private final BiMap<String, StateProperty<?>> blockTraitMap = HashBiMap.create();
 
     public String getIdFor(IProperty<?> blockTrait) {
         return checkNotNull(this.blockTraitMap.inverse().get(blockTrait), "BlockTrait doesn't have a registered id!");
-    }
-
-    @Override
-    public Map<String, BlockType> provideCatalogMap() {
-        Map<String, BlockType> blockMap = new HashMap<>();
-        for (Map.Entry<String, BlockType> entry : this.blockTypeMappings.entrySet()) {
-            blockMap.put(entry.getKey().replace("minecraft:", ""), entry.getValue());
-        }
-        return blockMap;
-    }
-
-    @Override
-    public Optional<BlockType> getById(String id) {
-        checkNotNull(id);
-        if (!id.contains(":") && !id.equals("none")) {
-            id = "minecraft:" + id; // assume vanilla
-        }
-        return Optional.ofNullable(this.blockTypeMappings.get(checkNotNull(id).toLowerCase(Locale.ENGLISH)));
-    }
-
-    @Override
-    public Collection<BlockType> getAll() {
-        return ImmutableSet.copyOf(this.blockTypeMappings.values());
     }
 
     @Override
@@ -126,7 +102,7 @@ public class BlockTypeRegistryModule implements SpongeAdditionalCatalogRegistryM
         for (net.minecraft.block.BlockState state : nmsBlock.getStateContainer().getValidStates()) {
             BlockStateRegistryModule.getInstance().registerBlockState((BlockState) state);
         }
-        for (Map.Entry<StateProperty<?>, ?> mapEntry : block.getDefaultState().getTraitMap().entrySet()) {
+        for (Map.Entry<StateProperty<?>, ?> mapEntry : block.getDefaultState().getStatePropertyMap().entrySet()) {
             StateProperty<?> property = mapEntry.getKey();
             final String propertyId = BlockPropertyIdProvider.getIdAndTryRegistration((IProperty<?>) property, (Block) block, id);
             if (property instanceof EnumStateProperty) {
@@ -147,7 +123,7 @@ public class BlockTypeRegistryModule implements SpongeAdditionalCatalogRegistryM
             .blockState(Blocks.AIR.getDefaultState())
             .build();
         RegistryHelper.setFinalStatic(BlockSnapshot.class, "NONE", NONE_SNAPSHOT);
-        this.blockTypeMappings.put("none", (BlockType) Blocks.AIR);
+        this.register(CatalogKey.minecraft("none"), (BlockType) Blocks.AIR);
     }
 
     BlockTypeRegistryModule() { }

@@ -24,15 +24,32 @@
  */
 package org.spongepowered.common.registry.type.advancement;
 
+import com.google.common.collect.ForwardingMap;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.common.SpongeImplHooks;
 
 import java.util.HashMap;
+import java.util.Map;
 
-public final class AdvancementMap extends HashMap<ResourceLocation, Advancement> {
+public final class AdvancementMap extends ForwardingMap<ResourceLocation, Advancement> {
 
     private static final long serialVersionUID = -1502089520911684373L;
+    
+    protected final Map<ResourceLocation, Advancement> delegate;
+
+    protected AdvancementMap() {
+        this(new HashMap<>());
+    }
+    
+    protected AdvancementMap(Map<ResourceLocation, Advancement> delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    protected Map<ResourceLocation, Advancement> delegate() {
+        return this.delegate;
+    }
 
     @Override
     public Advancement put(ResourceLocation key, Advancement value) {

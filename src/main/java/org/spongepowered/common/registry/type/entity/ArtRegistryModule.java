@@ -28,6 +28,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import net.minecraft.entity.item.PaintingType;
+import net.minecraft.util.registry.Registry;
 import org.spongepowered.api.data.type.ArtType;
 import org.spongepowered.api.data.type.ArtTypes;
 import org.spongepowered.api.registry.CatalogRegistryModule;
@@ -41,32 +43,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.entity.item.PaintingEntity;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
-public final class ArtRegistryModule implements CatalogRegistryModule<ArtType> {
-
-    @RegisterCatalog(ArtTypes.class)
-    private final Map<String, ArtType> artMappings = Maps.newHashMap();
-
-    @Override
-    public Optional<ArtType> getById(String id) {
-        return Optional.ofNullable(this.artMappings.get(checkNotNull(id).toLowerCase(Locale.ENGLISH)));
-    }
-
-    @Override
-    public Collection<ArtType> getAll() {
-        return ImmutableList.copyOf(this.artMappings.values());
-    }
+public final class ArtRegistryModule extends AbstractCatalogRegistryModule<ArtType> {
 
     @Override
     public void registerDefaults() {
-        for (PaintingEntity.EnumArt art : PaintingEntity.EnumArt.values()) {
-            this.artMappings.put(((ArtType) (Object) art).getId().toLowerCase(Locale.ENGLISH), (ArtType) (Object) art);
+        for (PaintingType art : Registry.MOTIVE) {
+            this.register(((ArtType) art).getKey(), (ArtType) art);
         }
     }
 
     @CustomCatalogRegistration
     public void customRegistration() {
-        this.registerDefaults();
+        this.registerDefaults();//todo
         RegistryHelper.mapFields(ArtTypes.class, field -> {
             String name = field.replace("_", "");
             return this.artMappings.get(name.toLowerCase(Locale.ENGLISH));
@@ -75,9 +65,9 @@ public final class ArtRegistryModule implements CatalogRegistryModule<ArtType> {
 
     @AdditionalRegistration
     public void registerAdditionals() {
-        for (PaintingEntity.EnumArt art : PaintingEntity.EnumArt.values()) {
-            if (!this.artMappings.containsValue(art)) {
-                this.artMappings.put(((ArtType) (Object) art).getId().toLowerCase(Locale.ENGLISH), (ArtType) (Object) art);
+        for (PaintingType art : Registry.MOTIVE) {
+            if (!this.catalogTypeMap.containsValue(art)) {
+                this.register(((ArtType) art).getKey(), (ArtType) art);
             }
         }
     }

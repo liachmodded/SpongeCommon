@@ -28,12 +28,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.minecraft.entity.merchant.villager.VillagerProfession;
 import org.spongepowered.api.data.type.Career;
 import org.spongepowered.api.data.type.Careers;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.api.registry.util.RegistrationDependency;
 import org.spongepowered.common.entity.SpongeCareer;
 import org.spongepowered.common.registry.SpongeAdditionalCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 import org.spongepowered.common.text.translation.SpongeTranslation;
 
 import java.util.Collection;
@@ -44,7 +46,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @RegistrationDependency(ProfessionRegistryModule.class)
-public class CareerRegistryModule implements SpongeAdditionalCatalogRegistryModule<Career> {
+// todo dead
+public class CareerRegistryModule extends AbstractCatalogRegistryModule<VillagerProfession> implements SpongeAdditionalCatalogRegistryModule<Career> {
 
     public final SpongeCareer LEATHERWORKER =
             new SpongeCareer(1, "minecraft:leatherworker", ProfessionRegistryModule.BUTCHER, new SpongeTranslation("entity.Villager.leather"));

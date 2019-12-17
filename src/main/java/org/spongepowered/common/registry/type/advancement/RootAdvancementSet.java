@@ -24,14 +24,31 @@
  */
 package org.spongepowered.common.registry.type.advancement;
 
+import com.google.common.collect.ForwardingSet;
 import net.minecraft.advancements.Advancement;
 import org.spongepowered.common.SpongeImplHooks;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 
-public final class RootAdvancementSet extends LinkedHashSet<Advancement> {
+public final class RootAdvancementSet extends ForwardingSet<Advancement> {
 
     private static final long serialVersionUID = 4921542661462938585L;
+    
+    protected final Set<Advancement> delegate;
+    
+    public RootAdvancementSet() {
+        this(new LinkedHashSet<>());
+    }
+    
+    public RootAdvancementSet(Set<Advancement> delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    protected Set<Advancement> delegate() {
+        return this.delegate;
+    }
 
     @Override
     public boolean add(Advancement advancement) {

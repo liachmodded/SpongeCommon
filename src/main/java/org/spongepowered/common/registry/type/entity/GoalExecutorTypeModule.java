@@ -26,71 +26,32 @@ package org.spongepowered.common.registry.type.entity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.entity.ai.GoalExecutor;
 import org.spongepowered.api.entity.ai.GoalExecutorType;
-import org.spongepowered.api.entity.ai.GoalExecutorTypes;
-import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.registry.AlternateCatalogRegistryModule;
-import org.spongepowered.api.registry.util.RegisterCatalog;
-import org.spongepowered.common.SpongeImpl;
 import org.spongepowered.common.entity.ai.SpongeGoalExecutorType;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
 import net.minecraft.entity.ai.goal.GoalSelector;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
-public class GoalExecutorTypeModule implements AlternateCatalogRegistryModule<GoalExecutorType> {
+public class GoalExecutorTypeModule extends AbstractCatalogRegistryModule<GoalExecutorType> implements AlternateCatalogRegistryModule<GoalExecutorType> {
 
     public static GoalExecutorTypeModule getInstance() {
         return Holder.INSTANCE;
     }
 
-    @RegisterCatalog(GoalExecutorTypes.class)
-    private final Map<CatalogKey, GoalExecutorType> goalExecutorTypes = new HashMap<>();
-
-    @Override
-    public Map<CatalogKey, GoalExecutorType> provideCatalogMap() {
-        return new HashMap<>(this.goalExecutorTypes);
-    }
-
-    @Override
-    public Optional<GoalExecutorType> get(CatalogKey id) {
-        checkNotNull(id);
-        return Optional.ofNullable(this.goalExecutorTypes.get(id));
-    }
-
-    @Override
-    public Collection<GoalExecutorType> getAll() {
-        return ImmutableList.copyOf(this.goalExecutorTypes.values());
-    }
-
     @Override
     public void registerDefaults() {
-        // todo bork
-        this.createGoalType(CatalogKey.minecraft("normal"), "Normal");
-        this.createGoalType(CatalogKey.minecraft("target"), "Target");
+        this.register("normal");
+        this.register("target");
     }
 
-    private GoalExecutorType createGoalType(CatalogKey combinedId) {
+    private void register(String id) {
+        CatalogKey combinedId = CatalogKey.minecraft(id);
         @SuppressWarnings("unchecked")
         final SpongeGoalExecutorType newType = new SpongeGoalExecutorType(combinedId, (Class<GoalExecutor<?>>) (Class<?>) GoalSelector.class);
-        this.goalExecutorTypes.put(combinedId, newType);
-        return newType;
-    }
-
-    public GoalExecutorType createGoalType(Object plugin, String id) {
-        final Optional<PluginContainer> optPluginContainer = SpongeImpl.getGame().getPluginManager().fromInstance(plugin);
-        Preconditions.checkArgument(optPluginContainer.isPresent());
-        final PluginContainer pluginContainer = optPluginContainer.get();
-        final CatalogKey combinedId = CatalogKey.builder().namespace(pluginContainer).value(id).build();
-
-        return this.createGoalType(combinedId);
+        this.register(combinedId, newType);
     }
 
     GoalExecutorTypeModule() {

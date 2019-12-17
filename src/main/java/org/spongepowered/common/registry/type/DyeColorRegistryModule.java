@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.data.type.DyeColor;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.registry.CatalogRegistryModule;
@@ -39,45 +40,31 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-public final class DyeColorRegistryModule implements CatalogRegistryModule<DyeColor> {
+public final class DyeColorRegistryModule extends AbstractCatalogRegistryModule<DyeColor> implements CatalogRegistryModule<DyeColor> {
 
     public static DyeColorRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
-    @RegisterCatalog(DyeColors.class)
-    private final Map<String, DyeColor> dyeColorMappings = Maps.newHashMap();
-
-    @Override
-    public Optional<DyeColor> getById(String id) {
-        return Optional.ofNullable(this.dyeColorMappings.get(checkNotNull(id).toLowerCase(Locale.ENGLISH)));
-    }
-
-
-    @Override
-    public Collection<DyeColor> getAll() {
-        return ImmutableList.copyOf(this.dyeColorMappings.values());
-    }
-
     @Override
     public void registerDefaults() {
         for (net.minecraft.item.DyeColor dyeColor : net.minecraft.item.DyeColor.values()) {
-            this.dyeColorMappings.put(dyeColor.getName().toLowerCase(Locale.ENGLISH), (DyeColor) (Object) dyeColor);
+            this.register(CatalogKey.minecraft(dyeColor.getName().toLowerCase(Locale.ROOT)), (DyeColor) (Object) dyeColor);
         }
     }
 
     @AdditionalRegistration
     public void registerAdditional() {
         for (net.minecraft.item.DyeColor dyeColor : net.minecraft.item.DyeColor.values()) {
-            if (!this.dyeColorMappings.containsValue(dyeColor)) {
-                this.dyeColorMappings.put(dyeColor.getName().toLowerCase(Locale.ENGLISH), (DyeColor) (Object) dyeColor);
+            if (!this.catalogTypeMap.containsValue(dyeColor)) {
+                this.register(CatalogKey.minecraft(dyeColor.getName().toLowerCase(Locale.ROOT)), (DyeColor) (Object) dyeColor);
             }
         }
     }
 
     public static Optional<DyeColor> fromId(int id) {
         for (net.minecraft.item.DyeColor color : net.minecraft.item.DyeColor.values()) {
-            if (color.getDyeDamage() == id) {
+            if (color.getId() == id) {
                 return Optional.of((DyeColor) (Object) color);
             }
         }

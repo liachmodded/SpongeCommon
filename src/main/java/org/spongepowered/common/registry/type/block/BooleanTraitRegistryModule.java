@@ -49,11 +49,6 @@ public final class BooleanTraitRegistryModule
         return false;
     }
 
-    @Override
-    public void registerAdditionalCatalog(BooleanStateProperty extraCatalog) {
-        this.catalogTypeMap.put(extraCatalog.getId().toLowerCase(Locale.ENGLISH), extraCatalog);
-    }
-
     public void registerBlock(String id, BlockType block, BooleanStateProperty property) {
         checkNotNull(id, "Id was null!");
         checkNotNull(property, "Property was null!");

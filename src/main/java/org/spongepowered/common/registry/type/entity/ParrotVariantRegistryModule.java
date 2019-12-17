@@ -24,23 +24,15 @@
  */
 package org.spongepowered.common.registry.type.entity;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.data.type.ParrotType;
-import org.spongepowered.api.data.type.ParrotTypes;
-import org.spongepowered.api.registry.CatalogRegistryModule;
-import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.entity.SpongeParrotVariant;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
-public class ParrotVariantRegistryModule implements CatalogRegistryModule<ParrotType> {
+public class ParrotVariantRegistryModule extends AbstractCatalogRegistryModule<ParrotType> {
 
     public static final Map<String, ParrotType> PARROT_VARIANTS = Maps.newHashMap();
     public static final Map<Integer, ParrotType> PARROT_VARIANT_IDMAP = Maps.newHashMap();
@@ -51,23 +43,11 @@ public class ParrotVariantRegistryModule implements CatalogRegistryModule<Parrot
     public static final SpongeParrotVariant CYAN_PARROT = new SpongeParrotVariant(3, "CYAN");
     public static final SpongeParrotVariant GRAY_PARROT = new SpongeParrotVariant(4, "GRAY");
 
-    @RegisterCatalog(ParrotTypes.class)
-    private final Map<String, ParrotType> parrotVariantMap = new HashMap<>();
-
-    @Override
-    public Optional<ParrotType> getById(String id) {
-        return Optional.ofNullable(this.parrotVariantMap.get(checkNotNull(id).toLowerCase(Locale.ENGLISH)));
-    }
-
-    @Override
-    public Collection<ParrotType> getAll() {
-        return ImmutableList.copyOf(this.parrotVariantMap.values());
-    }
-
     @Override
     public void registerDefaults() {
-        this.parrotVariantMap.putAll(PARROT_VARIANTS);
-
+        for (Map.Entry<String, ParrotType> entry : PARROT_VARIANTS.entrySet()) {
+            this.register(CatalogKey.minecraft(entry.getKey()), entry.getValue());
+        }
     }
 
     static {

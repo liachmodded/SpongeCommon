@@ -26,41 +26,60 @@ package org.spongepowered.common.registry.type;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.registry.CatalogRegistryModule;
+import org.spongepowered.common.registry.util.CatalogMapExposer;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class AbstractPrefixCheckCatalogRegistryModule<T extends CatalogType> implements CatalogRegistryModule<T> {
+public abstract class AbstractCatalogRegistryModule<T extends CatalogType> implements CatalogRegistryModule<T> {
 
-    protected final Map<String, T> catalogTypeMap = new ConcurrentHashMap<>();
-
-    protected final String defaultModIdToPrepend;
-
-    protected AbstractPrefixCheckCatalogRegistryModule(String defaultModIdToPrepend) {
-        this.defaultModIdToPrepend = defaultModIdToPrepend;
+    protected final Map<CatalogKey, T> catalogTypeMap;
+    
+    protected AbstractCatalogRegistryModule() {
+        this(new ConcurrentHashMap<>());
+    }
+    
+    protected AbstractCatalogRegistryModule(Map<CatalogKey, T> map) {
+        this.catalogTypeMap = map;
     }
 
     @Override
-    public Optional<T> getById(String id) {
-        String key = checkNotNull(id).toLowerCase(Locale.ENGLISH);
-        if (!key.contains(":")) {
-            key = this.defaultModIdToPrepend + ":" + key;
-        }
-        return Optional.ofNullable(this.catalogTypeMap.get(key));
+    public final Optional<T> get(CatalogKey id) {
+        checkNotNull(id);
+        return Optional.ofNullable(this.catalogTypeMap.get(id));
     }
 
     @Override
-    public Collection<T> getAll() {
+    public final Collection<T> getAll() {
         return Collections.unmodifiableCollection(this.catalogTypeMap.values());
     }
+    
+    protected final void register(CatalogKey key, T catalog) {
+        this.catalogTypeMap.put(key, catalog);
+    }
+    
+    protected final void register(String key, T catalog) {
+        this.catalogTypeMap.put(CatalogKey.minecraft(key), catalog);
+    }
 
-    protected void register(T catalog) {
-        this.catalogTypeMap.put(catalog.getId(), catalog);
+    protected final void register(T catalog) {
+        register(catalog.getKey(), catalog);
+    }
+    
+    @CatalogMapExposer
+    public Map<CatalogKey, T> provideCatalogMap() {
+        return new HashMap<>(this.catalogTypeMap);
+    }
+    
+    public void registerAdditionalCatalog(T catalog) {
+        this.register(catalog);
     }
 }

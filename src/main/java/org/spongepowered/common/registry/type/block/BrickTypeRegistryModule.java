@@ -31,7 +31,7 @@ import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.registry.type.MinecraftEnumBasedCatalogTypeModule;
 
 @RegisterCatalog(BrickTypes.class)
-public final class BrickTypeRegistryModule extends MinecraftEnumBasedCatalogTypeModule<BlockStoneBrick.EnumType, BrickType> {
+public final class BrickTypeRegistryModule extends MinecraftEnumBasedCatalogTypeModule<StoneBrickBlock.EnumType, BrickType> {
 
     @Override
     protected BlockStoneBrick.EnumType[] getValues() {

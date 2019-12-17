@@ -25,9 +25,9 @@
 package org.spongepowered.common.registry.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Sets;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.registry.AlternateCatalogRegistryModule;
 import org.spongepowered.api.registry.RegistrationPhase;
 import org.spongepowered.api.registry.RegistryModule;
@@ -65,13 +65,13 @@ public final class RegistryModuleLoader {
                     module.registerDefaults();
                     RegisterCatalog regAnnot = getRegisterCatalogAnnot(module);
                     if (regAnnot != null) {
-                        Map<String, ?> map = getCatalogMap(module);
+                        Map<CatalogKey, ?> map = getCatalogMap(module);
                         if (map.isEmpty()) {
                             SpongeImpl.getLogger().warn("{} has an empty CatalogMap. Implement registerDefaults() or use the CustomCatalogRegistration annotation", module.getClass().getCanonicalName());
                             return true;
                         }
                         Set<String> ignored = regAnnot.ignoredFields().length == 0 ? null : Sets.newHashSet(regAnnot.ignoredFields());
-                        RegistryHelper.mapFields(regAnnot.value(), map, ignored);
+                        RegistryHelper.mapFields(regAnnot.value(), map, ignored); // todo
                     }
                     return true;
                 } else {
@@ -132,7 +132,7 @@ public final class RegistryModuleLoader {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Map<String, ?> getCatalogMap(RegistryModule module) {
+    private static Map<CatalogKey, ?> getCatalogMap(RegistryModule module) {
         if (module instanceof AlternateCatalogRegistryModule) {
             return checkNotNull(((AlternateCatalogRegistryModule) module).provideCatalogMap(), "Provided CatalogMap can't be null");
         }
@@ -141,7 +141,18 @@ public final class RegistryModuleLoader {
             if (annotation != null) {
                 try {
                     field.setAccessible(true);
-                    Map<String, ?> map = (Map<String, ?>) field.get(module);
+                    Map<CatalogKey, ?> map = (Map<CatalogKey, ?>) field.get(module);
+                    return checkNotNull(map);
+                } catch (Exception e) {
+                    SpongeImpl.getLogger().error("Failed to retrieve a registry field from module: " + module.getClass().getCanonicalName());
+                }
+            }
+        }
+        for (Method method : module.getClass().getMethods()) {
+            CatalogMapExposer exposer = method.getDeclaredAnnotation(CatalogMapExposer.class);
+            if (exposer != null) {
+                try {
+                    Map<CatalogKey, ?> map = (Map<CatalogKey, ?>) method.invoke(module);
                     return checkNotNull(map);
                 } catch (Exception e) {
                     SpongeImpl.getLogger().error("Failed to retrieve a registry field from module: " + module.getClass().getCanonicalName());

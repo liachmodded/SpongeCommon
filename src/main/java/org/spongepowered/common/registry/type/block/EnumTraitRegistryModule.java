@@ -26,13 +26,14 @@ package org.spongepowered.common.registry.type.block;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.registry.AlternateCatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.api.state.EnumStateProperties;
 import org.spongepowered.api.state.EnumStateProperty;
 import org.spongepowered.common.registry.SpongeAdditionalCatalogRegistryModule;
-import org.spongepowered.common.registry.type.AbstractPrefixCheckCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -40,7 +41,7 @@ import java.util.Map;
 
 @RegisterCatalog(EnumStateProperties.class)
 public final class EnumTraitRegistryModule
-        extends AbstractPrefixCheckCatalogRegistryModule<EnumStateProperty<?>>
+        extends AbstractCatalogRegistryModule<EnumStateProperty<?>>
         implements SpongeAdditionalCatalogRegistryModule<EnumStateProperty<?>>, AlternateCatalogRegistryModule<EnumStateProperty<?>> {
 
     public static EnumTraitRegistryModule getInstance() {
@@ -50,11 +51,6 @@ public final class EnumTraitRegistryModule
     @Override
     public boolean allowsApiRegistration() {
         return false;
-    }
-
-    @Override
-    public void registerAdditionalCatalog(EnumStateProperty<?> extraCatalog) {
-        this.catalogTypeMap.put(extraCatalog.getId().toLowerCase(Locale.ENGLISH), extraCatalog);
     }
 
     public void registerBlock(String id, BlockType block, EnumStateProperty<?> property) {
@@ -67,15 +63,6 @@ public final class EnumTraitRegistryModule
 
     EnumTraitRegistryModule() {
         super("minecraft");
-    }
-
-    @Override
-    public Map<String, EnumStateProperty<?>> provideCatalogMap() {
-        Map<String, EnumStateProperty<?>> map = new HashMap<>();
-        for (Map.Entry<String, EnumStateProperty<?>> enumTraitEntry : this.catalogTypeMap.entrySet()) {
-            map.put(enumTraitEntry.getKey().replace("minecraft:", ""), enumTraitEntry.getValue());
-        }
-        return map;
     }
 
     private static final class Holder {

@@ -24,23 +24,15 @@
  */
 package org.spongepowered.common.registry.type.entity;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.api.data.type.CatType;
-import org.spongepowered.api.data.type.CatTypes;
-import org.spongepowered.api.registry.CatalogRegistryModule;
-import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.entity.SpongeOcelotType;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
-public class OcelotTypeRegistryModule implements CatalogRegistryModule<CatType> {
+public class OcelotTypeRegistryModule extends AbstractCatalogRegistryModule<CatType> {
 
     public static final Map<String, CatType> OCELOT_TYPES = Maps.newHashMap();
     public static final Map<Integer, CatType> OCELOT_IDMAP = Maps.newHashMap();
@@ -49,18 +41,6 @@ public class OcelotTypeRegistryModule implements CatalogRegistryModule<CatType> 
     public static final SpongeOcelotType BLACK_CAT = new SpongeOcelotType(1, "BLACK_CAT");
     public static final SpongeOcelotType RED_CAT = new SpongeOcelotType(2, "RED_CAT");
     public static final SpongeOcelotType SIAMESE_CAT = new SpongeOcelotType(3, "SIAMESE_CAT");
-    @RegisterCatalog(CatTypes.class)
-    private final Map<String, CatType> ocelotTypeMap = new HashMap<>();
-
-    @Override
-    public Optional<CatType> getById(String id) {
-        return Optional.ofNullable(this.ocelotTypeMap.get(checkNotNull(id).toLowerCase(Locale.ENGLISH)));
-    }
-
-    @Override
-    public Collection<CatType> getAll() {
-        return ImmutableList.copyOf(this.ocelotTypeMap.values());
-    }
 
     @Override
     public void registerDefaults() {
@@ -73,8 +53,10 @@ public class OcelotTypeRegistryModule implements CatalogRegistryModule<CatType> 
         OcelotTypeRegistryModule.OCELOT_IDMAP.put(1, OcelotTypeRegistryModule.BLACK_CAT);
         OcelotTypeRegistryModule.OCELOT_IDMAP.put(2, OcelotTypeRegistryModule.RED_CAT);
         OcelotTypeRegistryModule.OCELOT_IDMAP.put(3, OcelotTypeRegistryModule.SIAMESE_CAT);
-        this.ocelotTypeMap.putAll(OCELOT_TYPES);
 
+        for (Map.Entry<String, CatType> entry : OCELOT_TYPES.entrySet()) {
+            this.register(CatalogKey.minecraft(entry.getKey()), entry.getValue());
+        }
     }
 
 }

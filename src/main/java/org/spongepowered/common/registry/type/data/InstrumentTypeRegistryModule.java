@@ -29,13 +29,13 @@ import org.spongepowered.api.data.type.InstrumentTypes;
 import org.spongepowered.api.registry.AlternateCatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.data.type.SpongeInstrumentType;
-import org.spongepowered.common.registry.type.AbstractPrefixCheckCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RegisterCatalog(InstrumentTypes.class)
-public class InstrumentTypeRegistryModule extends AbstractPrefixCheckCatalogRegistryModule<InstrumentType>
+public class InstrumentTypeRegistryModule extends AbstractCatalogRegistryModule<InstrumentType>
         implements AlternateCatalogRegistryModule<InstrumentType> {
 
     public static InstrumentTypeRegistryModule getInstance() {

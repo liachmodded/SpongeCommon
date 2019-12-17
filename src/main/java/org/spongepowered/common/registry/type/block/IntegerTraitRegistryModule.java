@@ -32,7 +32,7 @@ import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.api.state.IntegerStateProperties;
 import org.spongepowered.api.state.IntegerStateProperty;
 import org.spongepowered.common.registry.SpongeAdditionalCatalogRegistryModule;
-import org.spongepowered.common.registry.type.AbstractPrefixCheckCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -40,7 +40,7 @@ import java.util.Map;
 
 @RegisterCatalog(IntegerStateProperties.class)
 public final class IntegerTraitRegistryModule
-    extends AbstractPrefixCheckCatalogRegistryModule<IntegerStateProperty>
+    extends AbstractCatalogRegistryModule<IntegerStateProperty>
         implements SpongeAdditionalCatalogRegistryModule<IntegerStateProperty>, AlternateCatalogRegistryModule<IntegerStateProperty> {
 
     public static IntegerTraitRegistryModule getInstance() {

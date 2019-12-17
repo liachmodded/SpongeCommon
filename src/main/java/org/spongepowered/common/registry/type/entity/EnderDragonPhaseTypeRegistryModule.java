@@ -29,6 +29,7 @@ import org.spongepowered.api.entity.living.monster.boss.dragon.phase.DragonPhase
 import org.spongepowered.api.registry.CatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.mixin.accessor.entity.boss.dragon.phase.PhaseTypeAccessor;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 import org.spongepowered.common.registry.type.entity.EnderDragonPhaseTypeRegistryModule.Holder;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,25 +38,12 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.entity.boss.dragon.phase.PhaseType;
 
-public class EnderDragonPhaseTypeRegistryModule implements CatalogRegistryModule<DragonPhaseType> {
-
-    @RegisterCatalog(DragonPhaseTypes.class)
-    private final Map<String, DragonPhaseType> phaseTypeMap = new HashMap<>();
-
-    @Override
-    public Optional<DragonPhaseType> getById(final String id) {
-        return Optional.ofNullable(this.phaseTypeMap.get(id));
-    }
-
-    @Override
-    public Collection<DragonPhaseType> getAll() {
-        return Collections.unmodifiableCollection(this.phaseTypeMap.values());
-    }
+public class EnderDragonPhaseTypeRegistryModule extends AbstractCatalogRegistryModule<DragonPhaseType> {
 
     @Override
     public void registerDefaults() {
         for (final PhaseType<?> phaseType : PhaseTypeAccessor.accessor$getPhases()) {
-            this.phaseTypeMap.put(((DragonPhaseType) phaseType).getId(), (DragonPhaseType) phaseType);
+            this.register((DragonPhaseType) phaseType);
         }
     }
 

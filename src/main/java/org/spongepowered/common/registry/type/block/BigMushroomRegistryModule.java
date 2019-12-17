@@ -30,7 +30,7 @@ import org.spongepowered.api.data.type.BigMushroomTypes;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.common.registry.type.MinecraftEnumBasedCatalogTypeModule;
 
-@RegisterCatalog(BigMushroomTypes.class)
+@RegisterCatalog(.class)
 public final class BigMushroomRegistryModule extends MinecraftEnumBasedCatalogTypeModule<HugeMushroomBlock.EnumType, BigMushroomType> {
 
     @Override

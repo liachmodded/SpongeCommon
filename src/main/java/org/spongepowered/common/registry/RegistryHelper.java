@@ -24,6 +24,7 @@
  */
 package org.spongepowered.common.registry;
 
+import org.spongepowered.api.CatalogKey;
 import org.spongepowered.common.SpongeImpl;
 
 import java.lang.reflect.Field;
@@ -49,12 +50,12 @@ public final class RegistryHelper {
         }
     }
 
-    public static boolean mapFields(Class<?> apiClass, Map<String, ?> mapping) {
+    public static boolean mapFields(Class<?> apiClass, Map<CatalogKey, ?> mapping) {
         return mapFields(apiClass, mapping, null);
     }
 
-    public static boolean mapFields(Class<?> apiClass, Map<String, ?> mapping, @Nullable Set<String> ignoredFields) {
-        return mapFields(apiClass, fieldName -> mapping.get(fieldName.toLowerCase(Locale.ENGLISH)), ignoredFields);
+    public static boolean mapFields(Class<?> apiClass, Map<CatalogKey, ?> mapping, @Nullable Set<String> ignoredFields) {
+        return mapFields(apiClass, fieldName -> mapping.get(CatalogKey.minecraft(fieldName.toLowerCase(Locale.ROOT))), ignoredFields);
     }
 
     public static boolean mapFields(Class<?> apiClass, Function<String, ?> mapFunction) {
@@ -71,10 +72,6 @@ public final class RegistryHelper {
             }
             try {
                 Object value = mapFunction.apply(fieldName);
-                if (value == null) {
-                    // check for minecraft id
-                    value = mapFunction.apply("minecraft:" + fieldName);
-                }
                 if (value == null) {
                     SpongeImpl.getLogger().warn("Skipping {}.{}", f.getDeclaringClass().getName(), fieldName);
                     continue;

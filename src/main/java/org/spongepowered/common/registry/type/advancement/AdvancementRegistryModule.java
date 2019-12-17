@@ -30,24 +30,25 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.advancements.AdvancementList;
 import net.minecraft.advancements.AdvancementRewards;
 import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.critereon.ImpossibleTrigger;
+import net.minecraft.advancements.criterion.ImpossibleTrigger;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.advancement.Advancement;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegistrationDependency;
+import org.spongepowered.common.SpongeImpl;
 import org.spongepowered.common.SpongeImplHooks;
 import org.spongepowered.common.bridge.advancements.AdvancementBridge;
 import org.spongepowered.common.bridge.advancements.AdvancementListBridge;
 import org.spongepowered.common.mixin.accessor.advancements.AdvancementManagerAccessor;
 import org.spongepowered.common.registry.CustomRegistrationPhase;
-import org.spongepowered.common.registry.type.AbstractPrefixCheckCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 
 import java.util.Map;
 
 @SuppressWarnings("unchecked")
 @CustomRegistrationPhase
 @RegistrationDependency(CriterionRegistryModule.class)
-public class AdvancementRegistryModule extends AbstractPrefixCheckCatalogRegistryModule<Advancement>
+public class AdvancementRegistryModule extends AbstractCatalogRegistryModule<Advancement>
         implements AdditionalCatalogRegistryModule<Advancement> {
 
     private static final Criterion dummyCriterion = new Criterion(new ImpossibleTrigger.Instance());
@@ -63,11 +64,10 @@ public class AdvancementRegistryModule extends AbstractPrefixCheckCatalogRegistr
     }
 
     AdvancementRegistryModule() {
-        super("minecraft");
     }
 
-    private static AdvancementListBridge getAdvancementList() {
-        return (AdvancementListBridge) AdvancementManagerAccessor.accessor$getAdvancementList();
+    static AdvancementListBridge getAdvancementList() {
+        return (AdvancementListBridge) ((AdvancementManagerAccessor) SpongeImpl.getServer().getAdvancementManager()).accessor$getAdvancementList();
     }
 
     @Override
@@ -95,7 +95,7 @@ public class AdvancementRegistryModule extends AbstractPrefixCheckCatalogRegistr
                 advList.bridge$getNonRootsSet().add(mcAdv)) { // Only update if the root wasn't already present for some reason
             final AdvancementList.IListener listener = advList.bridge$getListener();
             if (listener != null) {
-                listener.func_191932_c(mcAdv);
+                listener.nonRootAdvancementAdded(mcAdv);
             }
         }
     }

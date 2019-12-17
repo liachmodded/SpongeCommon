@@ -30,12 +30,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.minecraft.block.Blocks;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.EnumParticleTypes;
 import org.spongepowered.api.data.type.NotePitches;
 import org.spongepowered.api.effect.particle.ParticleOption;
 import org.spongepowered.api.effect.particle.ParticleOptions;
 import org.spongepowered.api.effect.particle.ParticleType;
-import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.item.FireworkEffect;
 import org.spongepowered.api.item.FireworkShapes;
@@ -46,7 +46,7 @@ import org.spongepowered.api.util.Color;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.common.effect.particle.SpongeParticleType;
 import org.spongepowered.common.item.SpongeItemStackSnapshot;
-import org.spongepowered.common.registry.type.AbstractPrefixCheckCatalogRegistryModule;
+import org.spongepowered.common.registry.type.AbstractCatalogRegistryModule;
 import org.spongepowered.common.registry.type.BlockTypeRegistryModule;
 import org.spongepowered.common.registry.type.ItemTypeRegistryModule;
 import org.spongepowered.common.registry.type.NotePitchRegistryModule;
@@ -62,32 +62,16 @@ import javax.annotation.Nullable;
 
 @RegistrationDependency({ ParticleOptionRegistryModule.class, NotePitchRegistryModule.class, BlockTypeRegistryModule.class,
         ItemTypeRegistryModule.class, PotionEffectTypeRegistryModule.class, FireworkShapeRegistryModule.class })
-public final class ParticleTypeRegistryModule extends AbstractPrefixCheckCatalogRegistryModule<ParticleType> {
+public final class ParticleTypeRegistryModule extends AbstractCatalogRegistryModule<ParticleType> {
 
     public static ParticleTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
-
-    @RegisterCatalog(ParticleTypes.class)
-    private final Map<String, ParticleType> particleByName = Maps.newHashMap();
-
-    @Override
-    public Optional<ParticleType> getById(String id) {
-        String key = checkNotNull(id).toLowerCase(Locale.ENGLISH);
-        if (!key.contains(":")) {
-            key = this.defaultModIdToPrepend + ":" + key;
-        }
-        return Optional.ofNullable(this.particleByName.get(key));
-    }
-
-    @Override
-    public Collection<ParticleType> getAll() {
-        return ImmutableList.copyOf(this.particleByName.values());
-    }
-
+    
     @Override
     public void registerDefaults() {
-        this.addParticleType("ambient_mob_spell", EnumParticleTypes.SPELL_MOB_AMBIENT, false, ImmutableMap.of(
+        //todo
+        this.addParticleType("ambient_mob_spell", ParticleTypes.SPELL_MOB_AMBIENT, false, ImmutableMap.of(
                 ParticleOptions.COLOR, Color.BLACK));
         this.addParticleType("angry_villager", EnumParticleTypes.VILLAGER_ANGRY, false);
         this.addParticleType("barrier", EnumParticleTypes.BARRIER, false);
@@ -187,10 +171,6 @@ public final class ParticleTypeRegistryModule extends AbstractPrefixCheckCatalog
     private void addEffectType(String id, @Nullable EnumParticleTypes internalType, Map<ParticleOption<?>, Object> options) {
         SpongeParticleType particleType = new SpongeParticleType("minecraft:" + id, id, internalType, options);
         this.particleByName.put(particleType.getId().toLowerCase(Locale.ENGLISH), particleType);
-    }
-
-    private ParticleTypeRegistryModule() {
-        super("minecraft");
     }
 
     private static class Holder {

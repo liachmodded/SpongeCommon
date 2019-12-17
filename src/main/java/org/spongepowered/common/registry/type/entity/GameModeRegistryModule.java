@@ -38,11 +38,4 @@ public final class GameModeRegistryModule extends MinecraftEnumBasedCatalogTypeM
         return GameType.values();
     }
 
-    @Override
-    protected void generateInitialMap() {
-        for (GameType enumType: this.getValues()) {
-            this.catalogTypeMap.put(this.enumAs(enumType).getId(), this.enumAs(enumType));
-        }
-    }
-
 }

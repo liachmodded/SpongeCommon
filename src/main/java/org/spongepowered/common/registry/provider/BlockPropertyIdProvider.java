@@ -29,7 +29,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.CaseFormat;
 import net.minecraft.block.*;
-import net.minecraft.block.properties.IProperty;
+import net.minecraft.state.IProperty;
+import net.minecraft.state.properties.BlockStateProperties;
 import org.apache.logging.log4j.LogManager;
 import org.spongepowered.common.registry.TypeProvider;
 
@@ -139,6 +140,8 @@ public class BlockPropertyIdProvider implements TypeProvider<IProperty<?>, Strin
     }
 
     BlockPropertyIdProvider() {
+        // todo grab from BlockStateProperties
+        
         this.register(HorizontalBlock.HORIZONTAL_FACING, "minecraft:horizontal_facing");
         this.register(RotatedPillarBlock.AXIS, "minecraft:pillar_axis");
         this.register(DirectionalBlock.FACING, "minecraft:directional_facing");
